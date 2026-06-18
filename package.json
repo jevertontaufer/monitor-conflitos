@@ -1,0 +1,14 @@
+{
+  "name": "monitor-conflitos-backend",
+  "version": "1.0.0",
+  "description": "Backend de intensidade (ACLED) para o Monitor de Conflitos Globais",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --env-file=.env server.js",
+    "start:mock": "ACLED_MOCK=1 node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

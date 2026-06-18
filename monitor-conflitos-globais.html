@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor de Conflitos Globais — Situação & Previsibilidade Econômica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0C0F14;
+    --panel:#141921;
+    --panel-2:#1B222C;
+    --panel-3:#232C38;
+    --line:rgba(255,255,255,0.08);
+    --line-2:rgba(255,255,255,0.14);
+    --text:#E7EAEE;
+    --muted:#8B95A1;
+    --faint:#5C6571;
+    --sig-active:#E5484D;
+    --sig-volatile:#E8A13A;
+    --sig-latent:#5B8DEF;
+    --sig-deescal:#3DAE7C;
+    --phosphor:#5FD0C6;
+    --radius:10px;
+    --display:'Space Grotesk',sans-serif;
+    --mono:'IBM Plex Mono',monospace;
+    --body:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--ink);
+    color:var(--text);
+    font-family:var(--body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:4rem;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 1.25rem}
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--faint);
+  }
+  a{color:inherit}
+  ::selection{background:var(--phosphor);color:#04201d}
+
+  /* ---------- header ---------- */
+  header.top{
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#0E1219 0%,var(--ink) 100%);
+    padding:1.5rem 0 1.25rem;
+  }
+  .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
+  h1{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:clamp(1.6rem,3.4vw,2.4rem);
+    line-height:1.05;
+    letter-spacing:-0.01em;
+  }
+  h1 .em{color:var(--phosphor)}
+  .subtitle{color:var(--muted);font-size:0.93rem;margin-top:0.4rem;max-width:46ch}
+  .clock-box{text-align:right;font-family:var(--mono);min-width:200px}
+  .clock-box .lbl{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--faint)}
+  #clock{font-size:1.05rem;color:var(--text);font-weight:500}
+  .clock-box .rev{font-size:11px;color:var(--muted);margin-top:0.45rem}
+
+  /* ---------- pulse strip ---------- */
+  .pulse{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    gap:1px;
+    background:var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .pulse .cell{background:var(--ink);padding:1.1rem 1.25rem}
+  .pulse .k{font-family:var(--mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint)}
+  .pulse .v{font-family:var(--display);font-size:1.7rem;font-weight:600;margin-top:0.25rem;line-height:1}
+  .pulse .v small{font-size:0.85rem;color:var(--muted);font-weight:400;font-family:var(--body)}
+  .pulse .note{font-size:11px;color:var(--muted);margin-top:0.35rem}
+  .pulse .v.red{color:var(--sig-active)}
+  .pulse .v.amber{color:var(--sig-volatile)}
+
+  /* ---------- section heading ---------- */
+  .sec{padding-top:2.4rem}
+  .sec-head{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:1.1rem;flex-wrap:wrap}
+  .sec-head h2{font-family:var(--display);font-weight:600;font-size:1.35rem;letter-spacing:-0.01em}
+  .sec-head .count{font-family:var(--mono);font-size:12px;color:var(--phosphor)}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1.4rem}
+  .search{
+    flex:1;min-width:200px;
+    background:var(--panel);border:1px solid var(--line-2);border-radius:var(--radius);
+    color:var(--text);font-family:var(--body);font-size:0.9rem;padding:0.6rem 0.85rem;
+  }
+  .search::placeholder{color:var(--faint)}
+  .search:focus{outline:2px solid var(--phosphor);outline-offset:1px;border-color:transparent}
+  .filters{display:flex;gap:0.4rem;flex-wrap:wrap}
+  .chip{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;
+    background:var(--panel);border:1px solid var(--line-2);border-radius:999px;
+    color:var(--muted);padding:0.45rem 0.85rem;cursor:pointer;transition:all .15s;
+  }
+  .chip:hover{border-color:var(--line);color:var(--text)}
+  .chip.on{background:var(--text);color:var(--ink);border-color:var(--text)}
+  .chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
+  .dot.active{background:var(--sig-active)}
+  .dot.volatile{background:var(--sig-volatile)}
+  .dot.latent{background:var(--sig-latent)}
+  .dot.deescal{background:var(--sig-deescal)}
+
+  /* ---------- conflict grid ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:0.9rem}
+  .card{
+    position:relative;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:1.05rem 1.1rem 1rem 1.35rem;overflow:hidden;
+    transition:border-color .15s,transform .15s;
+  }
+  .card:hover{border-color:var(--line-2);transform:translateY(-2px)}
+  .card .stripe{position:absolute;left:0;top:0;bottom:0;width:4px}
+  .stripe.active{background:var(--sig-active)}
+  .stripe.volatile{background:var(--sig-volatile)}
+  .stripe.latent{background:var(--sig-latent)}
+  .stripe.deescal{background:var(--sig-deescal)}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:0.6rem}
+  .card h3{font-family:var(--display);font-weight:600;font-size:1.02rem;letter-spacing:-0.01em;line-height:1.2}
+  .region{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);white-space:nowrap;padding-top:3px}
+  .badge{
+    display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;
+    padding:3px 8px;border-radius:5px;margin-top:0.55rem;font-weight:500;
+  }
+  .badge.active{background:rgba(229,72,77,0.14);color:#ff8a8d}
+  .badge.volatile{background:rgba(232,161,58,0.14);color:#f4c074}
+  .badge.latent{background:rgba(91,141,239,0.14);color:#93b4f5}
+  .badge.deescal{background:rgba(61,174,124,0.14);color:#73d3aa}
+  .driver{font-size:0.86rem;color:var(--muted);margin-top:0.7rem}
+  .econ{display:flex;align-items:center;gap:6px;margin-top:0.7rem;font-family:var(--mono);font-size:11px;color:var(--phosphor)}
+  .econ .ic{opacity:0.85}
+  .liveline{display:flex;align-items:center;gap:6px;margin-top:0.5rem;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .liveline .lv-dot{width:6px;height:6px;border-radius:50%;background:var(--sig-deescal);flex:none}
+  .badge .ao{opacity:0.7;font-weight:400}
+  .card-actions{margin-top:0.85rem;display:flex;gap:0.5rem}
+  .btn{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.04em;text-transform:uppercase;
+    background:transparent;border:1px solid var(--line-2);border-radius:6px;color:var(--text);
+    padding:0.4rem 0.7rem;cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:5px;
+  }
+  .btn:hover{background:var(--panel-3);border-color:var(--line)}
+  .btn.primary{border-color:var(--phosphor);color:var(--phosphor)}
+  .btn.primary:hover{background:rgba(95,208,198,0.1)}
+
+  /* ---------- transmission panel ---------- */
+  .trans{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:0.9rem}
+  .trans .t-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:1.1rem}
+  .trans .t-card h4{font-family:var(--display);font-size:1rem;font-weight:600;margin-bottom:0.5rem;display:flex;align-items:center;gap:8px}
+  .trans .t-card h4 .ic{color:var(--phosphor)}
+  .trans .t-card p{font-size:0.86rem;color:var(--muted)}
+  .trans .arrow{color:var(--faint);font-family:var(--mono);font-size:12px;margin:0.55rem 0 0.2rem}
+
+  /* ---------- live feed ---------- */
+  .feed-status{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);margin-bottom:0.9rem}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--sig-deescal);box-shadow:0 0 0 0 rgba(61,174,124,0.6);animation:ping 2s infinite}
+  .live-dot.err{background:var(--sig-active);animation:none}
+  .live-dot.load{background:var(--sig-volatile);animation:ping 1s infinite}
+  @keyframes ping{0%{box-shadow:0 0 0 0 rgba(61,174,124,0.5)}70%{box-shadow:0 0 0 7px rgba(61,174,124,0)}100%{box-shadow:0 0 0 0 rgba(61,174,124,0)}}
+  #feed{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .article{background:var(--panel);padding:0.85rem 1.05rem;display:flex;justify-content:space-between;gap:1rem;text-decoration:none;transition:background .15s}
+  .article:hover{background:var(--panel-2)}
+  .article .a-title{font-size:0.9rem;color:var(--text);line-height:1.35}
+  .article .a-meta{font-family:var(--mono);font-size:10px;color:var(--faint);white-space:nowrap;text-align:right;min-width:90px}
+  .feed-empty{background:var(--panel);padding:1.4rem 1.1rem;font-size:0.88rem;color:var(--muted)}
+  .feed-empty a{color:var(--phosphor)}
+
+  /* ---------- auto-refresh bar + sparkline ---------- */
+  .refresh-bar{
+    display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:0.7rem 0.95rem;margin-bottom:0.9rem;
+  }
+  .rb-group{display:flex;align-items:center;gap:0.5rem}
+  .rb-lbl{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint)}
+  .rb-sel{
+    background:var(--panel-2);border:1px solid var(--line-2);border-radius:6px;color:var(--text);
+    font-family:var(--mono);font-size:11px;padding:0.35rem 0.5rem;cursor:pointer;
+  }
+  .rb-sel:focus{outline:2px solid var(--phosphor);outline-offset:1px}
+  #countdown{font-family:var(--mono);font-size:12px;color:var(--phosphor);min-width:42px;text-align:center}
+  .rb-spacer{flex:1}
+  #last-upd{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .btn.sm{padding:0.35rem 0.6rem}
+  .btn.paused{border-color:var(--sig-volatile);color:var(--sig-volatile)}
+
+  .spark-wrap{
+    display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:0.85rem 1.05rem;margin-bottom:0.9rem;
+  }
+  .spark-meta{min-width:150px}
+  .spark-meta .sk{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint)}
+  .spark-meta .sv{font-family:var(--display);font-size:1.25rem;font-weight:600;margin-top:0.15rem;line-height:1;display:flex;align-items:baseline;gap:6px}
+  .spark-meta .trend{font-family:var(--mono);font-size:12px}
+  .trend.up{color:var(--sig-active)}
+  .trend.down{color:var(--sig-deescal)}
+  .trend.flat{color:var(--muted)}
+  .spark-svg{flex:1;min-width:180px;height:48px}
+  .spark-note{font-size:11px;color:var(--faint);width:100%;margin-top:-0.2rem}
+
+  /* ---------- footer ---------- */
+  footer{margin-top:3rem;border-top:1px solid var(--line);padding-top:1.6rem}
+  footer h4{font-family:var(--display);font-size:0.95rem;margin-bottom:0.5rem}
+  footer p{font-size:0.82rem;color:var(--muted);max-width:78ch;margin-bottom:0.7rem}
+  footer .src{font-family:var(--mono);font-size:11px;color:var(--faint);line-height:1.9}
+  .disclaimer{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--sig-volatile);border-radius:0 var(--radius) var(--radius) 0;padding:0.9rem 1.1rem;margin-bottom:1.4rem}
+  .disclaimer strong{color:var(--sig-volatile);font-weight:600}
+
+  .legend{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:1.1rem}
+  .legend span{display:flex;align-items:center;gap:6px}
+
+  @media (max-width:560px){
+    .clock-box{text-align:left}
+    .grid{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-row">
+    <div>
+      <div class="eyebrow">Monitor geopolítico · cenário global</div>
+      <h1>Conflitos globais <span class="em">&amp;</span> previsibilidade econômica</h1>
+      <p class="subtitle">Painel de acompanhamento dos conflitos ativos, voláteis e latentes no mundo, com leitura dos canais de transmissão para a economia. Inclui focos de grande escala e crises mais isoladas.</p>
+    </div>
+    <div class="clock-box">
+      <div class="lbl">Hora atual (local)</div>
+      <div id="clock">—</div>
+      <div class="rev">Revisão dos dados: 18 jun 2026</div>
+    </div>
+  </div>
+</header>
+
+<section class="pulse">
+  <div class="cell">
+    <div class="k">Conflitos ativos no mundo</div>
+    <div class="v red">~65 <small>+ ~20 tentativas de golpe</small></div>
+    <div class="note">Estimativa de monitores geopolíticos</div>
+  </div>
+  <div class="cell">
+    <div class="k">Focos de grande escala</div>
+    <div class="v">9</div>
+    <div class="note">Guerras e crises de alta intensidade</div>
+  </div>
+  <div class="cell">
+    <div class="k">Petróleo Brent (jun/26)</div>
+    <div class="v amber">US$ 68–98</div>
+    <div class="note">Faixa do mês · média 2026 ~US$ 87 (Fitch)</div>
+  </div>
+  <div class="cell">
+    <div class="k">Risco global nº 1 (WEF 2026)</div>
+    <div class="v" style="font-size:1.15rem;line-height:1.2">Conflito geoeconômico</div>
+    <div class="note">Sanções, tarifas e fragmentação</div>
+  </div>
+</section>
+
+<main class="wrap">
+
+  <section class="sec" id="conflitos">
+    <div class="sec-head">
+      <h2>Mapa dos conflitos</h2>
+      <span class="count" id="grid-count"></span>
+      <span class="count" id="live-status" style="color:var(--faint)">· intensidade: retrato curado</span>
+    </div>
+
+    <div class="legend">
+      <span><span class="dot active"></span>Ativo / alta intensidade</span>
+      <span><span class="dot volatile"></span>Volátil / cessar-fogo frágil</span>
+      <span><span class="dot deescal"></span>Em desescalada</span>
+      <span><span class="dot latent"></span>Latente / risco emergente</span>
+    </div>
+
+    <div class="controls">
+      <input class="search" id="search" type="text" placeholder="Buscar por país, região ou tema…" aria-label="Buscar conflitos">
+      <div class="filters" id="filters">
+        <button class="chip on" data-f="all">Todos</button>
+        <button class="chip" data-f="active"><span class="dot active"></span>Ativo</button>
+        <button class="chip" data-f="volatile"><span class="dot volatile"></span>Volátil</button>
+        <button class="chip" data-f="deescal"><span class="dot deescal"></span>Desescalada</button>
+        <button class="chip" data-f="latent"><span class="dot latent"></span>Latente</button>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="sec" id="economia">
+    <div class="sec-head">
+      <h2>Como os conflitos chegam à economia</h2>
+    </div>
+    <div class="trans">
+      <div class="t-card">
+        <h4><span class="ic">⬡</span>Energia</h4>
+        <p>O Estreito de Ormuz e o Mar Vermelho funcionam como gatilhos binários: bloqueio/reabertura move o Brent em dias. A guerra Irã-Israel levou o barril de ~US$ 68 a quase US$ 98 só em junho.</p>
+        <div class="arrow">conflito → petróleo → inflação → juros</div>
+      </div>
+      <div class="t-card">
+        <h4><span class="ic">⬡</span>Comércio &amp; cadeias</h4>
+        <p>Risco nº 1 do WEF para 2026: fragmentação geoeconômica. Sanções e tarifas substituem a cooperação multilateral; exportadores de commodities concentrados ficam mais expostos.</p>
+        <div class="arrow">sanções → fragmentação → custo logístico</div>
+      </div>
+      <div class="t-card">
+        <h4><span class="ic">⬡</span>Alimentos</h4>
+        <p>Guerra no Mar Negro pressiona grãos; Sudão, Iêmen, Gaza e Sudão do Sul concentram a fome aguda. A ONU estima 266 milhões em insegurança alimentar grave.</p>
+        <div class="arrow">guerra → grãos → preço dos alimentos</div>
+      </div>
+      <div class="t-card">
+        <h4><span class="ic">⬡</span>Minerais &amp; tecnologia</h4>
+        <p>RDC concentra cobalto e coltan; o Sahel, urânio e ouro; Taiwan, os semicondutores avançados. Disputas aqui afetam baterias, defesa e chips de IA.</p>
+        <div class="arrow">disputa → insumos críticos → tecnologia</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="noticias">
+    <div class="sec-head">
+      <h2>Notícias ao vivo</h2>
+      <span class="count" id="feed-topic"></span>
+    </div>
+    <div class="feed-status">
+      <span class="live-dot load" id="live-dot"></span>
+      <span id="feed-state">Conectando ao fluxo de notícias…</span>
+    </div>
+
+    <div class="refresh-bar">
+      <div class="rb-group">
+        <button class="btn primary sm" id="toggle-auto">⏸ Auto ligado</button>
+      </div>
+      <div class="rb-group">
+        <span class="rb-lbl">Intervalo</span>
+        <select class="rb-sel" id="interval">
+          <option value="60">1 min</option>
+          <option value="180" selected>3 min</option>
+          <option value="300">5 min</option>
+          <option value="600">10 min</option>
+        </select>
+      </div>
+      <div class="rb-group">
+        <span class="rb-lbl">Próxima</span>
+        <span id="countdown">—</span>
+      </div>
+      <span class="rb-spacer"></span>
+      <span id="last-upd">—</span>
+      <button class="btn sm" id="refresh-now">↻ Atualizar agora</button>
+    </div>
+
+    <div class="spark-wrap" id="spark-wrap" style="display:none">
+      <div class="spark-meta">
+        <div class="sk">Atenção da mídia · 7 dias</div>
+        <div class="sv"><span id="spark-val">—</span><span class="trend flat" id="spark-trend"></span></div>
+      </div>
+      <svg class="spark-svg" id="spark-svg" viewBox="0 0 400 48" preserveAspectRatio="none" role="img" aria-label="Tendência de volume de cobertura noticiosa nos últimos 7 dias"></svg>
+      <div class="spark-note">Volume de cobertura noticiosa (GDELT), em % de toda a mídia global monitorada — um proxy de atenção, não de baixas.</div>
+    </div>
+
+    <div id="feed"></div>
+  </section>
+
+  <footer>
+    <div class="disclaimer">
+      <strong>Sobre o "tempo real".</strong> O fluxo automático está ativo: o feed de notícias e o sinal de atenção da mídia se atualizam sozinhos no intervalo escolhido, puxando dados ao vivo do GDELT (base aberta, sem chave) direto no seu navegador. Já a classificação de intensidade dos conflitos é um retrato curado e datado (revisão de 18 jun 2026), não um fluxo automático — bases de eventos como ACLED e UCDP exigem chave de acesso e um servidor intermediário, então não podem ser lidas diretamente por uma página estática. Para automatizar também essa camada, é preciso hospedar a página com um pequeno backend que guarde a chave da ACLED e devolva os eventos já filtrados. Trate a intensidade como leitura analítica, sujeita a mudança rápida.
+    </div>
+    <h4>Metodologia</h4>
+    <p>Os conflitos foram classificados em quatro níveis — ativo, volátil, em desescalada e latente — segundo intensidade militar e estágio diplomático no momento da revisão. A ênfase de cada ficha está no canal pelo qual o conflito se transmite à economia, e não apenas na contagem de baixas, porque o valor preditivo está em quais gargalos (energia, grãos, minerais, semicondutores) cada foco ameaça.</p>
+    <h4 style="margin-top:1rem">Fontes consultadas</h4>
+    <p class="src">
+      Crisis Group · Fórum Econômico Mundial (Relatório de Riscos Globais 2026) · ONU News / FAO-WFP (Pontos Críticos de Fome) · Human Rights Watch (World Report 2026) · Reuters · CNN Brasil · Exame · Euronews · Conselho da UE · Wellington Management (XP Global Conference 2026).
+    </p>
+  </footer>
+
+</main>
+
+<script>
+const CONFLICTS = [
+  {n:"Rússia – Ucrânia",r:"Europa",lvl:"active",w:92,
+   d:"Guerra ativa, negociações estagnadas; nova rodada de sanções da UE em 15/jun. Rússia perde ~30 mil soldados/mês.",
+   e:"Energia · grãos · economia europeia",q:"guerra Ucrânia Rússia"},
+  {n:"Sudão (exército × RSF)",r:"África",lvl:"active",w:55,
+   d:"Guerra civil intensificada em Darfur e Cordofão; risco de fome severa para 19 milhões; massacre em El Fasher.",
+   e:"Crise humanitária · ouro",q:"guerra civil Sudão RSF"},
+  {n:"RDC – M23 / Ruanda",r:"África",lvl:"active",w:45,
+   d:"Rebeldes apoiados por Ruanda disputam províncias de minerais críticos no leste; escalada em 2026.",
+   e:"Cobalto · coltan",q:"Congo M23 Ruanda"},
+  {n:"Sahel (Mali · Burkina · Níger)",r:"África",lvl:"active",w:40,
+   d:"Bloqueio jihadista parcial sobre Bamako; risco crescente de colapso de regimes militares.",
+   e:"Urânio · ouro",q:"Sahel Mali jihadistas Bamako"},
+  {n:"Haiti – gangues",r:"Américas",lvl:"active",w:30,
+   d:"Quadrilhas controlam ~85% de Porto Príncipe; quase guerra civil. Conselho de transição com mandato expirado.",
+   e:"Migração · colapso de Estado",q:"Haiti gangues Porto Príncipe"},
+  {n:"Somália – Al-Shabaab",r:"África",lvl:"active",w:24,
+   d:"Insurgência persistente; risco iminente de fome em Burhakaba após secas sucessivas.",
+   e:"Segurança regional · fome",q:"Somália Al-Shabaab"},
+  {n:"Nigéria – Borno (ISWAP)",r:"África",lvl:"active",w:22,
+   d:"Insurgência no nordeste eleva desnutrição crítica; estado de Borno entra em alerta máximo de fome.",
+   e:"Petróleo · alimentos",q:"Nigéria Borno insurgência"},
+  {n:"Myanmar (guerra civil)",r:"Ásia",lvl:"active",w:20,
+   d:"Conflito prolongado entre a junta militar e forças étnicas; território fragmentado.",
+   e:"Comércio regional",q:"Myanmar guerra civil"},
+  {n:"Irã – Israel / EUA",r:"Oriente Médio",lvl:"deescal",w:88,
+   d:"Guerra de fev/2026 oficialmente encerrada em 14/jun; tratado de paz previsto para 19/jun na Suíça, com reabertura de Ormuz. Histórico frágil.",
+   e:"Petróleo · Estreito de Ormuz",q:"Irã Israel acordo paz Ormuz"},
+  {n:"Gaza – Israel / Hamas",r:"Oriente Médio",lvl:"volatile",w:48,
+   d:"Plano de cessar-fogo de out/25 estagnado na 1ª fase; bombardeios continuam, desmilitarização travada.",
+   e:"Estabilidade regional",q:"Gaza Israel cessar-fogo Hamas"},
+  {n:"Iêmen – Houthis × governo",r:"Oriente Médio",lvl:"volatile",w:42,
+   d:"\u201CCalma relativa, não paz\u201D desde a trégua de 2022; ataques houthis à navegação no Mar Vermelho; 18 mi em insegurança alimentar.",
+   e:"Mar Vermelho · navegação",q:"Iêmen Houthis Mar Vermelho"},
+  {n:"Venezuela (pós-Maduro)",r:"Américas",lvl:"volatile",w:40,
+   d:"Maduro capturado pelos EUA em jan/26; governo interino de Delcy Rodríguez; oposição cobra eleições; crise econômica severa.",
+   e:"Petróleo · migração",q:"Venezuela Maduro transição"},
+  {n:"Síria – pós-Assad / ISIS",r:"Oriente Médio",lvl:"volatile",w:28,
+   d:"Violência sectária e ressurgimento do ISIS após a queda de Assad (dez/24); lacunas de segurança.",
+   e:"Estabilidade regional",q:"Síria ISIS violência sectária"},
+  {n:"Líbano – Israel / Hezbollah",r:"Oriente Médio",lvl:"volatile",w:26,
+   d:"Israel mantém ataques no sul; cessar-fogo ligado ao acordo com o Irã, mas tensão persiste.",
+   e:"Estabilidade regional",q:"Líbano Israel Hezbollah"},
+  {n:"China – Taiwan",r:"Ásia",lvl:"latent",w:78,
+   d:"Pressão militar e exercícios chineses; EUA reconhecem risco de ataque até o fim de 2027.",
+   e:"Semicondutores · cadeias globais",q:"China Taiwan tensão militar"},
+  {n:"Índia – Paquistão (Caxemira)",r:"Ásia",lvl:"latent",w:35,
+   d:"Disputa territorial desde 1947; confrontos esporádicos e temor de escalada entre potências nucleares.",
+   e:"Risco nuclear regional",q:"Índia Paquistão Caxemira"},
+  {n:"Etiópia – Eritreia",r:"África",lvl:"latent",w:20,
+   d:"Tensão crescente sobre acesso ao mar; risco de guerra que pode incendiar o Chifre da África.",
+   e:"Rotas marítimas regionais",q:"Etiópia Eritreia tensão"},
+  {n:"Armênia – Azerbaijão (Cáucaso)",r:"Cáucaso",lvl:"latent",w:16,
+   d:"Disputa em torno de Nagorno-Karabakh; confrontos esporádicos extremamente letais sem solução definitiva.",
+   e:"Corredor de energia (gás)",q:"Armênia Azerbaijão Nagorno-Karabakh"},
+  {n:"Bálcãs (Kosovo · Sérvia · Bósnia)",r:"Europa",lvl:"latent",w:14,
+   d:"Tensões étnicas remanescentes da dissolução da Iugoslávia ameaçam a governabilidade regional.",
+   e:"Estabilidade europeia",q:"Bálcãs Kosovo Sérvia tensão"},
+  {n:"Sudão do Sul",r:"África",lvl:"latent",w:14,
+   d:"1ª eleição nacional desde 2011 adiada para dez/2026; risco de recaída em guerra civil; fome aguda.",
+   e:"Petróleo · ajuda humanitária",q:"Sudão do Sul eleição conflito"},
+];
+
+const LVL_LABEL = {active:"Ativo",volatile:"Volátil",deescal:"Desescalada",latent:"Latente"};
+
+/* ===== camada de intensidade ao vivo (backend ACLED) =====
+   Deixe vazio para usar o mesmo domínio que serve a página (recomendado:
+   rode o server.js e abra http://localhost:8787). Ou aponte para a URL do
+   seu backend, ex.: 'https://seu-backend.exemplo.com' */
+const BACKEND_URL = '';
+
+/* conflito -> países como a ACLED os grafa */
+const ACLED_MAP = {
+  "Rússia – Ucrânia":["Ukraine","Russia"],
+  "Sudão (exército × RSF)":["Sudan"],
+  "RDC – M23 / Ruanda":["Democratic Republic of Congo"],
+  "Sahel (Mali · Burkina · Níger)":["Mali","Burkina Faso","Niger"],
+  "Haiti – gangues":["Haiti"],
+  "Somália – Al-Shabaab":["Somalia"],
+  "Nigéria – Borno (ISWAP)":["Nigeria"],
+  "Myanmar (guerra civil)":["Myanmar"],
+  "Irã – Israel / EUA":["Iran","Israel"],
+  "Gaza – Israel / Hamas":["Palestine"],
+  "Iêmen – Houthis × governo":["Yemen"],
+  "Venezuela (pós-Maduro)":["Venezuela"],
+  "Síria – pós-Assad / ISIS":["Syria"],
+  "Líbano – Israel / Hezbollah":["Lebanon"],
+  "China – Taiwan":["Taiwan","China"],
+  "Índia – Paquistão (Caxemira)":["India","Pakistan"],
+  "Etiópia – Eritreia":["Ethiopia","Eritrea"],
+  "Armênia – Azerbaijão (Cáucaso)":["Armenia","Azerbaijan"],
+  "Bálcãs (Kosovo · Sérvia · Bósnia)":["Serbia","Kosovo"],
+  "Sudão do Sul":["South Sudan"],
+};
+
+function liveLevel(ev,fat){
+  if(fat>=150||ev>=250)return"active";
+  if(fat>=15||ev>=40)return"volatile";
+  return"latent";
+}
+
+/* ---- clock ---- */
+function tick(){
+  const now=new Date();
+  const f=new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('clock').textContent=f.format(now);
+}
+tick();setInterval(tick,1000);
+
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ---- render grid ---- */
+let activeFilter='all';
+const grid=document.getElementById('grid');
+const gridCount=document.getElementById('grid-count');
+const liveStatusEl=document.getElementById('live-status');
+
+function render(){
+  const term=document.getElementById('search').value.trim().toLowerCase();
+  const list=CONFLICTS
+    .filter(c=>{
+      const lvl=c.live?c.liveLvl:c.lvl;
+      return activeFilter==='all'||lvl===activeFilter;
+    })
+    .filter(c=>!term||(c.n+' '+c.r+' '+c.d+' '+c.e).toLowerCase().includes(term))
+    .sort((a,b)=>(b.live?b.liveW:b.w)-(a.live?a.liveW:a.w));
+  grid.innerHTML='';
+  list.forEach(c=>{
+    const lvl=c.live?c.liveLvl:c.lvl;
+    const el=document.createElement('article');
+    el.className='card';
+    let badge='<span class="badge '+lvl+'">'+LVL_LABEL[lvl];
+    if(c.live)badge+=' <span class="ao">· ao vivo</span>';
+    badge+='</span>';
+    let liveline='';
+    if(c.live){
+      liveline='<div class="liveline"><span class="lv-dot"></span>'+
+        c.liveEv.toLocaleString('pt-BR')+' eventos · '+
+        c.liveFat.toLocaleString('pt-BR')+' mortes · '+c.liveWin+'d (ACLED)</div>';
+    }
+    el.innerHTML=
+      '<div class="stripe '+lvl+'"></div>'+
+      '<div class="card-top"><h3>'+escapeHtml(c.n)+'</h3><span class="region">'+escapeHtml(c.r)+'</span></div>'+
+      badge+
+      '<p class="driver">'+escapeHtml(c.d)+'</p>'+
+      '<div class="econ"><span class="ic">⬡</span>'+escapeHtml(c.e)+'</div>'+
+      liveline+
+      '<div class="card-actions">'+
+        '<button class="btn primary" data-q="'+encodeURIComponent(c.q)+'" data-name="'+escapeHtml(c.n)+'">▸ Notícias</button>'+
+        '<a class="btn" target="_blank" rel="noopener" href="https://news.google.com/search?q='+encodeURIComponent(c.q)+'&hl=pt-BR&gl=BR">Google News ↗</a>'+
+      '</div>';
+    grid.appendChild(el);
+  });
+  gridCount.textContent=list.length+' de '+CONFLICTS.length+' focos';
+  grid.querySelectorAll('.btn.primary').forEach(b=>{
+    b.addEventListener('click',()=>loadFeed(decodeURIComponent(b.dataset.q),b.dataset.name));
+  });
+}
+
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('filters').addEventListener('click',e=>{
+  const btn=e.target.closest('.chip');if(!btn)return;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  btn.classList.add('on');activeFilter=btn.dataset.f;render();
+});
+render();
+
+/* ---- aplica intensidade ao vivo do backend ---- */
+async function applyLiveIntensity(){
+  const base=(BACKEND_URL||'').replace(/\/$/,'');
+  try{
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),9000);
+    const res=await fetch(base+'/intensity',{signal:ctrl.signal});clearTimeout(to);
+    if(!res.ok)throw 0;
+    const data=await res.json();
+    const C=data.countries||{};const win=data.window_days||30;let matched=0;
+    CONFLICTS.forEach(c=>{
+      const keys=ACLED_MAP[c.n];if(!keys)return;
+      let ev=0,fat=0,any=false;
+      keys.forEach(k=>{if(C[k]){ev+=C[k].events||0;fat+=C[k].fatalities||0;any=true;}});
+      if(!any)return;
+      matched++;
+      c.live=true;c.liveEv=ev;c.liveFat=fat;c.liveWin=win;
+      c.liveLvl=liveLevel(ev,fat);
+      c.liveW=ev+fat*3;
+    });
+    if(matched){
+      const when=new Date(data.updated||Date.now()).toLocaleString('pt-BR');
+      const tag=data.source==='mock'?'dados de exemplo':'ACLED ao vivo';
+      liveStatusEl.innerHTML='· intensidade: <span style="color:var(--sig-deescal)">'+tag+'</span> · janela '+win+'d · '+when;
+      liveStatusEl.style.color='var(--muted)';
+      render();
+    }
+  }catch(e){
+    liveStatusEl.textContent='· intensidade: retrato curado (backend não conectado)';
+  }
+}
+applyLiveIntensity();
+setInterval(applyLiveIntensity,20*60000);
+
+/* ---- live news feed (GDELT) + auto-refresh ---- */
+const feed=document.getElementById('feed');
+const dot=document.getElementById('live-dot');
+const state=document.getElementById('feed-state');
+const topicLbl=document.getElementById('feed-topic');
+const sparkWrap=document.getElementById('spark-wrap');
+const sparkSvg=document.getElementById('spark-svg');
+const sparkVal=document.getElementById('spark-val');
+const sparkTrend=document.getElementById('spark-trend');
+const countdownEl=document.getElementById('countdown');
+const lastUpdEl=document.getElementById('last-upd');
+const toggleBtn=document.getElementById('toggle-auto');
+const intervalSel=document.getElementById('interval');
+const refreshBtn=document.getElementById('refresh-now');
+
+let curQuery='Ukraine OR Gaza OR Sudan OR Iran OR Venezuela OR Taiwan';
+let curLabel='panorama global';
+let autoOn=true;
+let intervalSec=parseInt(intervalSel.value,10);
+let remaining=intervalSec;
+
+function relTime(s){
+  if(!s)return'';
+  const y=s.slice(0,4),mo=s.slice(4,6),d=s.slice(6,8),h=s.slice(9,11),mi=s.slice(11,13);
+  const dt=new Date(Date.UTC(+y,+mo-1,+d,+h,+mi));
+  const diff=Math.round((Date.now()-dt)/60000);
+  if(isNaN(diff))return'';
+  if(diff<60)return diff+' min';
+  if(diff<1440)return Math.round(diff/60)+' h';
+  return Math.round(diff/1440)+' d';
+}
+
+function renderSpark(points){
+  if(!points||points.length<2){sparkWrap.style.display='none';return;}
+  const vals=points.map(p=>p.value);
+  const max=Math.max(...vals),min=Math.min(...vals);
+  const span=(max-min)||1;
+  const n=points.length;
+  const W=400,H=48,pad=3;
+  const coords=points.map((p,i)=>{
+    const x=(i/(n-1))*(W);
+    const y=H-pad-((p.value-min)/span)*(H-2*pad);
+    return x.toFixed(1)+','+y.toFixed(1);
+  });
+  const last=vals[vals.length-1];
+  const prev=vals.length>=24?vals[vals.length-24]:vals[0];
+  const chg=prev>0?((last-prev)/prev)*100:0;
+  let cls='flat',arrow='→';
+  if(chg>8){cls='up';arrow='▲';}else if(chg<-8){cls='down';arrow='▼';}
+  const stroke=cls==='up'?'#E5484D':cls==='down'?'#3DAE7C':'#8B95A1';
+  const area='0,'+H+' '+coords.join(' ')+' '+W+','+H;
+  sparkSvg.innerHTML=
+    '<polygon points="'+area+'" fill="'+stroke+'" opacity="0.10"></polygon>'+
+    '<polyline points="'+coords.join(' ')+'" fill="none" stroke="'+stroke+'" stroke-width="1.6" vector-effect="non-scaling-stroke"></polyline>';
+  sparkVal.textContent=last.toFixed(3)+'%';
+  sparkTrend.className='trend '+cls;
+  sparkTrend.textContent=arrow+' '+(chg>=0?'+':'')+chg.toFixed(0)+'% / 24h';
+  sparkWrap.style.display='flex';
+}
+
+async function fetchTimeline(query){
+  const url='https://api.gdeltproject.org/api/v2/doc/doc?query='+encodeURIComponent('('+query+')')+
+            '&mode=timelinevol&format=json&timespan=7d';
+  try{
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),9000);
+    const res=await fetch(url,{signal:ctrl.signal});clearTimeout(to);
+    if(!res.ok)throw 0;
+    const data=await res.json();
+    const series=(data.timeline&&data.timeline[0]&&data.timeline[0].data)||[];
+    renderSpark(series);
+  }catch(e){sparkWrap.style.display='none';}
+}
+
+async function fetchArticles(query){
+  const url='https://api.gdeltproject.org/api/v2/doc/doc?query='+encodeURIComponent('('+query+')')+
+            '&mode=artlist&format=json&maxrecords=18&sort=datedesc&timespan=7d';
+  const fallback='https://news.google.com/search?q='+encodeURIComponent(query)+'&hl=pt-BR&gl=BR';
+  try{
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),9000);
+    const res=await fetch(url,{signal:ctrl.signal});clearTimeout(to);
+    if(!res.ok)throw 0;
+    const data=await res.json();
+    const arts=(data.articles||[]).filter(a=>a.title&&a.url);
+    if(!arts.length)throw 0;
+    dot.className='live-dot';
+    state.textContent='Ao vivo · '+arts.length+' artigos · últimos 7 dias';
+    feed.innerHTML='';
+    arts.forEach(a=>{
+      const el=document.createElement('a');
+      el.className='article';el.href=a.url;el.target='_blank';el.rel='noopener';
+      el.innerHTML='<span class="a-title">'+escapeHtml(a.title)+'</span>'+
+                   '<span class="a-meta">'+escapeHtml(a.domain||'')+'<br>'+relTime(a.seendate)+'</span>';
+      feed.appendChild(el);
+    });
+  }catch(err){
+    dot.className='live-dot err';
+    state.textContent='Fluxo automático indisponível';
+    feed.innerHTML='<div class="feed-empty">Não foi possível carregar o feed automático neste momento '+
+      '(comum ao abrir o arquivo sem servidor, ou se a fonte estiver fora do ar — a atualização automática segue tentando). '+
+      'Notícias direto na fonte: <a target="_blank" rel="noopener" href="'+fallback+'">abrir busca ↗</a>.</div>';
+  }
+}
+
+async function loadFeed(query,label){
+  curQuery=query;curLabel=label;
+  dot.className='live-dot load';
+  state.textContent='Buscando notícias…';
+  topicLbl.textContent=label?('· '+label):'· panorama global';
+  await Promise.all([fetchArticles(query),fetchTimeline(query)]);
+  const now=new Date();
+  lastUpdEl.textContent='Atualizado '+now.toLocaleTimeString('pt-BR');
+  remaining=intervalSec;
+}
+
+/* countdown + auto-refresh loop */
+function fmtCd(s){const m=Math.floor(s/60),ss=s%60;return m+':'+String(ss).padStart(2,'0');}
+setInterval(()=>{
+  if(!autoOn){countdownEl.textContent='pausado';return;}
+  remaining--;
+  if(remaining<=0){loadFeed(curQuery,curLabel);return;}
+  countdownEl.textContent=fmtCd(remaining);
+},1000);
+
+toggleBtn.addEventListener('click',()=>{
+  autoOn=!autoOn;
+  toggleBtn.textContent=autoOn?'⏸ Auto ligado':'▶ Auto pausado';
+  toggleBtn.classList.toggle('paused',!autoOn);
+  toggleBtn.classList.toggle('primary',autoOn);
+  if(autoOn){remaining=intervalSec;}
+});
+intervalSel.addEventListener('change',()=>{
+  intervalSec=parseInt(intervalSel.value,10);remaining=intervalSec;
+});
+refreshBtn.addEventListener('click',()=>loadFeed(curQuery,curLabel));
+
+loadFeed('Ukraine OR Gaza OR Sudan OR Iran OR Venezuela OR Taiwan','panorama global');
+</script>
+</body>
+</html>
