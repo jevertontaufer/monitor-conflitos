@@ -74,6 +74,9 @@ async function getToken() {
     throw new Error(`Falha na autenticação ACLED (${res.status}): ${txt.slice(0, 200)}`);
   }
   const j = await res.json();
+if (country === "Ukraine" && page === 1) {
+  console.log("ACLED resposta:", JSON.stringify(j, null, 2));
+}
   // renova 5 min antes de expirar, por segurança
   tokenCache = { access: j.access_token, exp: now + (j.expires_in - 300) * 1000 };
   return tokenCache.access;
